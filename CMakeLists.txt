@@ -15,6 +15,7 @@ SET(SRC_FILES ${SOURCE_DIR}/main.cpp
 			  ${SOURCE_DIR}/MultiClassVoxelizer.cpp 
 			  ${SOURCE_DIR}/MultiClassVoxelGrid.cpp 
 			  ${SOURCE_DIR}/ColoredVoxelizer.cpp 
+			  ${SOURCE_DIR}/Voxelizer.cpp 
 			  ${SOURCE_DIR}/ColoredVoxelGrid.cpp 
 			  ${SOURCE_DIR}/tinyply.cpp)
 
@@ -22,6 +23,7 @@ SET(HEADER_FILES ${HEADER_DIR}/MultiClassVoxelGrid.h
 				 ${HEADER_DIR}/VoxelGrid.h 
 				 ${HEADER_DIR}/MultiClassVoxelizer.h 
 				 ${HEADER_DIR}/ColoredVoxelGrid.h 
+			  	 ${HEADER_DIR}/Voxelizer.h 
 				 ${HEADER_DIR}/ColoredVoxelizer.h 
 				 ${HEADER_DIR}/tinyply.h)
 

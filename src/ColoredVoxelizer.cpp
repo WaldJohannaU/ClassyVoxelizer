@@ -45,66 +45,21 @@ ColoredVoxelGrid ColoredVoxelizer::Voxelize(std::vector<Eigen::Vector3f>& vertic
     
 }
 
-void ColoredVoxelizer::SplitFace(ColoredVoxelGrid &voxel_grid, std::vector<Eigen::Vector3f> &vertices, std::vector<Eigen::Vector3i> &colors, std::vector<uint32_t> &face, std::vector<uint32_t> &sub_faces) {
-
-	if (areaOfTriangle(vertices[face[0]], vertices[face[1]], vertices[face[2]]) < ColoredVOXELIZER_MIN_TRIANGLE_AREA) {
-		sub_faces.insert(sub_faces.end(), face.begin(), face.end());
-		return;
-	}
-
-    std::vector<double> side_lengths(3,0);
-    bool single_voxel_triangle = true;
-    for (int i = 0; i < 3; i++) {
-		if (voxel_grid.GetEnclosingVoxelID(vertices[face[i % 3]]) != voxel_grid.GetEnclosingVoxelID(vertices[face[(i + 1) % 3]])) {
-            side_lengths[i] = euclideanDistance(vertices[face[i % 3]], vertices[face[(i + 1) % 3]]);
-            single_voxel_triangle = false;
-        }        
-    }
-
-    if (single_voxel_triangle) {
-        sub_faces.insert(sub_faces.end(), face.begin(), face.end());
-        return;
-    }
-
-    int longest_i = 0;
-    double longest_length = 0;
-    for (int i = 0; i < 3; i++) {
-        if (side_lengths[i] > longest_length) {
-            longest_length = side_lengths[i];
-            longest_i = i;
-        }
-    }
-    
-	Eigen::Vector3f new_midpoint = GetMidpoint(vertices[face[longest_i % 3]], vertices[face[(longest_i + 1) % 3]]);
-    vertices.push_back(new_midpoint);
-    colors.push_back( (colors[face[longest_i % 3]] + colors[face[(longest_i + 1) % 3]]) / 2 );
-    
+void ColoredVoxelizer::SplitFace(ColoredVoxelGrid& voxel_grid,
+                                 std::vector<Eigen::Vector3f>& vertices,
+                                 std::vector<Eigen::Vector3i>& colors,
+                                 std::vector<uint32_t>& face,
+                                 std::vector<uint32_t>& sub_faces) {
     std::vector<uint32_t> first_sub_face(3);
-	first_sub_face[0] = face[longest_i % 3];
-	first_sub_face[1] = face[(longest_i + 2) % 3];
-    first_sub_face[2] = vertices.size()-1;
+    std::vector<uint32_t> second_sub_face(3);
     
-	std::vector<uint32_t> second_sub_face(3);
-	second_sub_face[0] = face[(longest_i + 1) % 3];
-	second_sub_face[1] = face[(longest_i + 2) % 3];
-    second_sub_face[2] = vertices.size()-1;
+    const int longest_i = SplitBaseFace(voxel_grid, vertices, face, sub_faces,
+                                        first_sub_face, second_sub_face);
+    if (longest_i == -1)
+        return;
+    
+	colors.push_back((colors[face[longest_i % 3]] + colors[face[(longest_i + 1) % 3]]) / 2);
     
     SplitFace(voxel_grid, vertices, colors, first_sub_face, sub_faces);
     SplitFace(voxel_grid, vertices, colors, second_sub_face, sub_faces);
-            
-}
-
-float ColoredVoxelizer::AreaOfTriangle(Eigen::Vector3f vertex_1, Eigen::Vector3f vertex_2, Eigen::Vector3f vertex_3) {
-
-    return (vertex_2 - vertex_1).cross(vertex_3 - vertex_1).norm() / 2.0;
-
-}
-
-Eigen::Vector3f ColoredVoxelizer::GetMidpoint(Eigen::Vector3f v1, Eigen::Vector3f v2) {
-    
-    return (v1 + v2) / 2;
-}
-           
-float ColoredVoxelizer::EuclideanDistance(Eigen::Vector3f v1, Eigen::Vector3f v2) {
-    return std::sqrt(std::pow((v1[0] - v2[0]),2) + std::pow((v1[1] - v2[1]),2) + std::pow((v1[2] - v2[2]),2));
 }
