@@ -8,7 +8,11 @@
 
 #include "MultiClassVoxelizer.h"
 
-MultiClassVoxelGrid MultiClassVoxelizer::voxelize(std::vector<Eigen::Vector3f> &vertices, std::vector<uint32_t> &faces, std::vector<uint8_t> &vertex_classes, Eigen::Vector3f grid_min, Eigen::Vector3f grid_max, float voxel_size) {
+MultiClassVoxelGrid MultiClassVoxelizer::voxelize(std::vector<Eigen::Vector3f>& vertices,
+                                                  std::vector<uint32_t>& faces,
+                                                  std::vector<uint16_t>& vertex_classes,
+                                                  Eigen::Vector3f& grid_min,
+                                                  Eigen::Vector3f& grid_max, float voxel_size) {
 
     MultiClassVoxelGrid voxel_grid(grid_min, grid_max, voxel_size);
     
@@ -35,8 +39,8 @@ MultiClassVoxelGrid MultiClassVoxelizer::voxelize(std::vector<Eigen::Vector3f> &
     int vertex_i = 0;
     for (auto split_face_vertex_i : split_faces) {
 
-        int voxel_id = voxel_grid.getEnclosingVoxelID(vertices[split_face_vertex_i]);
-        voxel_grid.setVoxelClass(voxel_id, vertex_classes[split_face_vertex_i]);
+        int voxel_id = voxel_grid.GetEnclosingVoxelID(vertices[split_face_vertex_i]);
+        voxel_grid.SetVoxelClass(voxel_id, vertex_classes[split_face_vertex_i]);
     }
 
     std::cout << "100%" << std::endl;
@@ -45,7 +49,11 @@ MultiClassVoxelGrid MultiClassVoxelizer::voxelize(std::vector<Eigen::Vector3f> &
     
 }
 
-void MultiClassVoxelizer::splitFace(MultiClassVoxelGrid &voxel_grid, std::vector<Eigen::Vector3f> &vertices, std::vector<uint8_t> &vertex_classes, std::vector<uint32_t> &face, std::vector<uint32_t> &sub_faces) {
+void MultiClassVoxelizer::splitFace(MultiClassVoxelGrid& voxel_grid,
+                                    std::vector<Eigen::Vector3f>& vertices,
+                                    std::vector<uint16_t>& vertex_classes,
+                                    std::vector<uint32_t>& face,
+                                    std::vector<uint32_t>& sub_faces) {
 
 	if (areaOfTriangle(vertices[face[0]], vertices[face[1]], vertices[face[2]]) < MULTICLASSVOXELIZER_MIN_TRIANGLE_AREA) {
 		sub_faces.insert(sub_faces.end(), face.begin(), face.end());
@@ -55,7 +63,7 @@ void MultiClassVoxelizer::splitFace(MultiClassVoxelGrid &voxel_grid, std::vector
     std::vector<double> side_lengths(3,0);
     bool single_voxel_triangle = true;
     for (int i = 0; i < 3; i++) {
-		if (voxel_grid.getEnclosingVoxelID(vertices[face[i % 3]]) != voxel_grid.getEnclosingVoxelID(vertices[face[(i + 1) % 3]])) {
+		if (voxel_grid.GetEnclosingVoxelID(vertices[face[i % 3]]) != voxel_grid.GetEnclosingVoxelID(vertices[face[(i + 1) % 3]])) {
             side_lengths[i] = euclideanDistance(vertices[face[i % 3]], vertices[face[(i + 1) % 3]]);
             single_voxel_triangle = false;
         }        
@@ -94,17 +102,18 @@ void MultiClassVoxelizer::splitFace(MultiClassVoxelGrid &voxel_grid, std::vector
             
 }
 
-float MultiClassVoxelizer::areaOfTriangle(Eigen::Vector3f vertex_1, Eigen::Vector3f vertex_2, Eigen::Vector3f vertex_3) {
+float MultiClassVoxelizer::areaOfTriangle(const Eigen::Vector3f& vertex_1,
+                                          const Eigen::Vector3f& vertex_2,
+                                          const Eigen::Vector3f& vertex_3) {
 
     return (vertex_2 - vertex_1).cross(vertex_3 - vertex_1).norm() / 2.0;
 
 }
 
-Eigen::Vector3f MultiClassVoxelizer::getMidpoint(Eigen::Vector3f v1, Eigen::Vector3f v2) {
-    
+Eigen::Vector3f MultiClassVoxelizer::getMidpoint(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2) {
     return (v1 + v2) / 2;
 }
            
-float MultiClassVoxelizer::euclideanDistance(Eigen::Vector3f v1, Eigen::Vector3f v2) {
+float MultiClassVoxelizer::euclideanDistance(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2) {
     return std::sqrt(std::pow((v1[0] - v2[0]),2) + std::pow((v1[1] - v2[1]),2) + std::pow((v1[2] - v2[2]),2));
 }

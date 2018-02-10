@@ -9,40 +9,34 @@
 #ifndef __MULTICLASSVOXELGRID__
 #define __MULTICLASSVOXELGRID__
 
+#include <fstream>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
-#include <fstream>
 #include <vector>
 
 //Eigen
 #include <Eigen/Dense>
+#include "VoxelGrid.h"
 
 #include "tinyply.h"
 
-class MultiClassVoxelGrid {
+class MultiClassVoxelGrid: public VoxelGridInterface {
 public:
-    MultiClassVoxelGrid(Eigen::Vector3f grid_min, Eigen::Vector3f grid_max, float voxel_size);
-    uint32_t getEnclosingVoxelID(Eigen::Vector3f vertex);
-    Eigen::Vector3i getVoxelsPerDim();
-    void setVoxelClass(uint32_t voxel_id, uint8_t class_i);
-    int getVoxelClass(uint32_t voxel_id);
-    std::vector<uint8_t> getVoxelGrid();
-    void saveAsRAW(std::string filepath);
-    void saveAsPLY(std::string filepath, std::vector<Eigen::Vector3i> class_color_mapping);
-	bool isVoxelOccupied(uint32_t voxel_id);
-	bool isVoxelOccupied(Eigen::Vector3f vertex);
-	unsigned int getNumOccupied();
-    
+    MultiClassVoxelGrid(const Eigen::Vector3f& grid_min,
+                        const Eigen::Vector3f& grid_max,
+                        float voxel_size);
+    virtual void SaveAsRAW(const std::string& filepath) const override;
+    void SaveAsPLY(const std::string& filepath,
+                   const std::vector<Eigen::Vector3i>& class_color_mapping) const;
+    void SetVoxelClass(const uint32_t voxel_id, const uint8_t class_i);
 private:
-    Eigen::Vector3i _voxels_per_dim;
-    Eigen::Vector3f _grid_min;
-    Eigen::Vector3f _grid_max;
-    Eigen::Vector3f _grid_size;
-    float _voxel_size;
     std::vector<uint8_t> _voxelgrid;
-    uint32_t _num_voxels;
-    
+
+    virtual bool IsVoxelOccupied(const uint32_t voxel_id) const override;
+    virtual int GetVoxelClass(const uint32_t voxel_id) const;
+  
+    const std::vector<uint8_t>& GetVoxelGrid() const;
 };
 
 #endif /* defined(__MULTICLASSVOXELGRID__) */

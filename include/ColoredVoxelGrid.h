@@ -17,32 +17,29 @@
 
 //Eigen
 #include <Eigen/Dense>
+#include "VoxelGrid.h"
 
 #include "tinyply.h"
 
-class ColoredVoxelGrid {
+class ColoredVoxelGrid: public VoxelGridInterface {
 public:
-    ColoredVoxelGrid(Eigen::Vector3f grid_min, Eigen::Vector3f grid_max, float voxel_size);
-    uint32_t getEnclosingVoxelID(Eigen::Vector3f vertex);
-    Eigen::Vector3i getVoxelsPerDim();
-    void setVoxelColor(uint32_t voxel_id, Eigen::Vector3i color);
-    Eigen::Vector3i getVoxelColor(uint32_t voxel_id);
-    std::vector<Eigen::Vector3i> getVoxelGrid();
-    void saveAsRAW(std::string filepath);
-    void saveAsPLY(std::string filepath);
-	bool isVoxelOccupied(uint32_t voxel_id);
-	bool isVoxelOccupied(Eigen::Vector3f vertex);
-	unsigned int getNumOccupied();
-    
+    ColoredVoxelGrid(const Eigen::Vector3f& grid_min,
+                     const Eigen::Vector3f& grid_max,
+                     float voxel_size);
+
+    virtual void SaveAsRAW(const std::string& filepath) const override;
+    void SaveAsPLY(const std::string& filepath) const;
+    void SetVoxelColor(const Eigen::Vector3f& vertex, const Eigen::Vector3i& color);
+
 private:
-    Eigen::Vector3i _voxels_per_dim;
-    Eigen::Vector3f _grid_min;
-    Eigen::Vector3f _grid_max;
-    Eigen::Vector3f _grid_size;
-    float _voxel_size;
     std::vector<Eigen::Vector3i> _voxelgrid;
-    uint32_t _num_voxels;
+    void SetVoxelColor(const uint32_t voxel_id, const Eigen::Vector3i& color);
+
+    virtual bool IsVoxelOccupied(const uint32_t voxel_id) const override;
+    std::vector<Eigen::Vector3i> GetVoxelGrid();
     
+    Eigen::Vector3i GetVoxelColor(const uint32_t voxel_id) const;
+    const std::vector<Eigen::Vector3i>& GetVoxelGrid() const;
 };
 
 #endif /* defined(__ColoredVOXELGRID__) */

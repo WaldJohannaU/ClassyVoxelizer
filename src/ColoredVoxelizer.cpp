@@ -8,7 +8,7 @@
 
 #include "ColoredVoxelizer.h"
 
-ColoredVoxelGrid ColoredVoxelizer::voxelize(std::vector<Eigen::Vector3f> &vertices, std::vector<uint32_t> &faces, std::vector<Eigen::Vector3i> &colors, Eigen::Vector3f grid_min, Eigen::Vector3f grid_max, float voxel_size) {
+ColoredVoxelGrid ColoredVoxelizer::voxelize(std::vector<Eigen::Vector3f>& vertices, std::vector<uint32_t> &faces, std::vector<Eigen::Vector3i> &colors, Eigen::Vector3f grid_min, Eigen::Vector3f grid_max, float voxel_size) {
 
     ColoredVoxelGrid voxel_grid(grid_min, grid_max, voxel_size);
     
@@ -32,12 +32,8 @@ ColoredVoxelGrid ColoredVoxelizer::voxelize(std::vector<Eigen::Vector3f> &vertic
         
     }
     
-    int vertex_i = 0;
     for (auto& split_face_vertex_i : split_faces) {
-
-        int voxel_id = voxel_grid.getEnclosingVoxelID(vertices[split_face_vertex_i]);
-        // std::cout << voxel_id << std::endl;
-        voxel_grid.setVoxelColor(voxel_id, colors[split_face_vertex_i]);
+        voxel_grid.SetVoxelColor(vertices[split_face_vertex_i], colors[split_face_vertex_i]);
     }
 
     std::cout << "100%" << std::endl;
@@ -56,7 +52,7 @@ void ColoredVoxelizer::splitFace(ColoredVoxelGrid &voxel_grid, std::vector<Eigen
     std::vector<double> side_lengths(3,0);
     bool single_voxel_triangle = true;
     for (int i = 0; i < 3; i++) {
-		if (voxel_grid.getEnclosingVoxelID(vertices[face[i % 3]]) != voxel_grid.getEnclosingVoxelID(vertices[face[(i + 1) % 3]])) {
+		if (voxel_grid.GetEnclosingVoxelID(vertices[face[i % 3]]) != voxel_grid.GetEnclosingVoxelID(vertices[face[(i + 1) % 3]])) {
             side_lengths[i] = euclideanDistance(vertices[face[i % 3]], vertices[face[(i + 1) % 3]]);
             single_voxel_triangle = false;
         }        

@@ -24,13 +24,25 @@
 
 class MultiClassVoxelizer {
 public:
-    static MultiClassVoxelGrid voxelize(std::vector<Eigen::Vector3f> &vertices, std::vector<uint32_t> &faces, std::vector<uint8_t> &vertex_classes, Eigen::Vector3f grid_min, Eigen::Vector3f grid_max, float voxel_size);
-    
+    static MultiClassVoxelGrid voxelize(std::vector<Eigen::Vector3f>& vertices,
+                                        std::vector<uint32_t>& faces,
+                                        std::vector<uint16_t>& vertex_classes,
+                                        Eigen::Vector3f& grid_min,
+                                        Eigen::Vector3f& grid_max, float voxel_size);
 private:
-    static Eigen::Vector3f getMidpoint(Eigen::Vector3f v1, Eigen::Vector3f v2);
-    static float euclideanDistance(Eigen::Vector3f v1, Eigen::Vector3f v2);
-    static float areaOfTriangle(Eigen::Vector3f vertex_1, Eigen::Vector3f vertex_2, Eigen::Vector3f vertex_3);
-	static void splitFace(MultiClassVoxelGrid &voxel_grid, std::vector<Eigen::Vector3f> &vertices, std::vector<uint8_t> &vertex_classes, std::vector<uint32_t> &face, std::vector<uint32_t> &sub_faces);
+    static Eigen::Vector3f getMidpoint(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2);
+
+    static float euclideanDistance(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2);
+    
+    static float areaOfTriangle(const Eigen::Vector3f& vertex_1,
+                                const Eigen::Vector3f& vertex_2,
+                                const Eigen::Vector3f& vertex_3);
+    
+	static void splitFace(MultiClassVoxelGrid& voxel_grid,
+                          std::vector<Eigen::Vector3f>& vertices,
+                          std::vector<uint16_t>& vertex_classes,
+                          std::vector<uint32_t>& face,
+                          std::vector<uint32_t>& sub_faces);
        
 };
 
