@@ -20,30 +20,29 @@
 
 #include "MultiClassVoxelGrid.h"
 
-#define MULTICLASSVOXELIZER_MIN_TRIANGLE_AREA 0.00001
+constexpr float kVoxelizerMinTriangleArea = 0.00001;
 
 class MultiClassVoxelizer {
 public:
-    static MultiClassVoxelGrid voxelize(std::vector<Eigen::Vector3f>& vertices,
+    static MultiClassVoxelGrid Voxelize(std::vector<Eigen::Vector3f>& vertices,
                                         std::vector<uint32_t>& faces,
-                                        std::vector<uint16_t>& vertex_classes,
                                         Eigen::Vector3f& grid_min,
-                                        Eigen::Vector3f& grid_max, float voxel_size);
+                                        Eigen::Vector3f& grid_max, float voxel_size,
+                                        std::vector<uint16_t>& vertex_classes);
 private:
-    static Eigen::Vector3f getMidpoint(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2);
+    static Eigen::Vector3f GetMidpoint(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2);
 
-    static float euclideanDistance(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2);
+    static float EuclideanDistance(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2);
     
-    static float areaOfTriangle(const Eigen::Vector3f& vertex_1,
+    static float AreaOfTriangle(const Eigen::Vector3f& vertex_1,
                                 const Eigen::Vector3f& vertex_2,
                                 const Eigen::Vector3f& vertex_3);
     
-	static void splitFace(MultiClassVoxelGrid& voxel_grid,
+	static void SplitFace(MultiClassVoxelGrid& voxel_grid,
                           std::vector<Eigen::Vector3f>& vertices,
                           std::vector<uint16_t>& vertex_classes,
                           std::vector<uint32_t>& face,
                           std::vector<uint32_t>& sub_faces);
-       
 };
 
 #endif /* defined(__MULTICLASSVOXELIZER__) */
