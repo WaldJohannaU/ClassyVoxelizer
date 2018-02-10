@@ -8,14 +8,12 @@
 
 #include "MultiClassVoxelizer.h"
 
-MultiClassVoxelGrid MultiClassVoxelizer::Voxelize(std::vector<Eigen::Vector3f>& vertices,
+void MultiClassVoxelizer::Voxelize(MultiClassVoxelGrid& voxel_grid,
+                                   std::vector<Eigen::Vector3f>& vertices,
                                                   std::vector<uint32_t>& faces,
-                                                  Eigen::Vector3f& grid_min,
-                                                  Eigen::Vector3f& grid_max, float voxel_size,
                                                   std::vector<uint16_t>& vertex_classes) {
 
-    MultiClassVoxelGrid voxel_grid(grid_min, grid_max, voxel_size);
-    
+
     std::vector<uint32_t> split_faces;
     int ten_percent_step = faces.size() / 10;
     
@@ -40,7 +38,6 @@ MultiClassVoxelGrid MultiClassVoxelizer::Voxelize(std::vector<Eigen::Vector3f>& 
     }
 
     std::cout << "100%" << std::endl;
-    return voxel_grid;
 }
 
 void MultiClassVoxelizer::SplitFace(MultiClassVoxelGrid& voxel_grid,

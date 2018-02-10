@@ -32,7 +32,6 @@ protected:
                               std::vector<uint32_t>& first_sub_face,
                               std::vector<uint32_t>& second_sub_face) const;
 
-public:
 };
 
 #endif /* defined(__MULTICLASSVOXELIZER__) */

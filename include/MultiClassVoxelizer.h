@@ -23,11 +23,10 @@
 
 class MultiClassVoxelizer: public Voxelizer {
 public:
-    MultiClassVoxelGrid Voxelize(std::vector<Eigen::Vector3f>& vertices,
-                                 std::vector<uint32_t>& faces,
-                                 Eigen::Vector3f& grid_min,
-                                 Eigen::Vector3f& grid_max, float voxel_size,
-                                 std::vector<uint16_t>& vertex_classes);
+    void Voxelize(MultiClassVoxelGrid& voxel_grid,
+                  std::vector<Eigen::Vector3f>& vertices,
+                  std::vector<uint32_t>& faces,
+                  std::vector<uint16_t>& vertex_classes);
 private:
     virtual void SplitFace(MultiClassVoxelGrid& voxel_grid,
                    std::vector<Eigen::Vector3f>& vertices,

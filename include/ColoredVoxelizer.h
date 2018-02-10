@@ -22,10 +22,10 @@
 
 class ColoredVoxelizer: public Voxelizer {
 public:
-    ColoredVoxelGrid Voxelize(std::vector<Eigen::Vector3f>& vertices,
-                                    std::vector<uint32_t>& faces,
-                                     Eigen::Vector3f grid_min, Eigen::Vector3f grid_max, float voxel_size,
-                                     std::vector<Eigen::Vector3i>& colors);
+    void Voxelize(ColoredVoxelGrid& voxel_grid,
+                  std::vector<Eigen::Vector3f>& vertices,
+                  std::vector<uint32_t>& faces,
+                  std::vector<Eigen::Vector3i>& colors);
 private:
 	void SplitFace(ColoredVoxelGrid& voxel_grid,
                    std::vector<Eigen::Vector3f>& vertices,

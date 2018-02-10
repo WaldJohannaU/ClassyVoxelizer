@@ -69,3 +69,4 @@ int Voxelizer::SplitBaseFace(const VoxelGridInterface& voxel_grid,
     
     return longest_i;
 }
+

@@ -8,41 +8,27 @@
 
 #include "ColoredVoxelizer.h"
 
-ColoredVoxelGrid ColoredVoxelizer::Voxelize(std::vector<Eigen::Vector3f>& vertices,
+void ColoredVoxelizer::Voxelize(ColoredVoxelGrid& voxel_grid,
+                                            std::vector<Eigen::Vector3f>& vertices,
                                             std::vector<uint32_t> &faces,
-                                            Eigen::Vector3f grid_min, Eigen::Vector3f grid_max, float voxel_size,
                                             std::vector<Eigen::Vector3i> &colors) {
-
-    ColoredVoxelGrid voxel_grid(grid_min, grid_max, voxel_size);
-    
     std::vector<uint32_t> split_faces;
-
-    int ten_percent_step = faces.size() / 10;
-    
+    const int ten_percent_step = faces.size() / 10;
+    std::vector<uint32_t> face(3);
     for (int i = 0; i < faces.size(); i+=3) {
-        
-        std::vector<uint32_t> face(3);
         face[0] = faces[i];
         face[1] = faces[i+1];
         face[2] = faces[i+2];
-        
 		std::vector<uint32_t> sub_faces;
 		SplitFace(voxel_grid, vertices, colors, face, sub_faces);
-		split_faces.insert(split_faces.end(), sub_faces.begin(), sub_faces.end());
-
+        split_faces.insert(split_faces.end(), sub_faces.begin(), sub_faces.end());
         if ((i % ten_percent_step == 0 || (i-1) % ten_percent_step == 0 || (i-2) % ten_percent_step == 0) && i != 0)
             std::cout << i / ten_percent_step << "0% " << std::flush;
-        
     }
-    
     for (auto& split_face_vertex_i : split_faces) {
         voxel_grid.SetVoxelColor(vertices[split_face_vertex_i], colors[split_face_vertex_i]);
     }
-
     std::cout << "100%" << std::endl;
-
-    return voxel_grid;
-    
 }
 
 void ColoredVoxelizer::SplitFace(ColoredVoxelGrid& voxel_grid,
