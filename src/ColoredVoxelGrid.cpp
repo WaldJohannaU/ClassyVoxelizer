@@ -34,15 +34,6 @@ const std::vector<Eigen::Vector3i>& ColoredVoxelGrid::GetVoxelGrid() const {
     return _voxelgrid;
 }
 
-void ColoredVoxelGrid::SaveAsRAW(const std::string& filepath) const {
-    
-    std::ofstream output_file(filepath);
-
-	for (const auto& voxel: _voxelgrid)
-		output_file << std::to_string(voxel[0]) << " " << std::to_string(voxel[1]) << " " << std::to_string(voxel[2]) << std::endl;
-    output_file.close();
-}
-
 void ColoredVoxelGrid::SaveAsPLY(const std::string& filepath) const {
 	unsigned int num_occupied_voxels = 0;
 	for (const auto& voxel: _voxelgrid) {

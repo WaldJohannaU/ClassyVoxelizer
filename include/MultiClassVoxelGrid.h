@@ -26,7 +26,6 @@ public:
     MultiClassVoxelGrid(const Eigen::Vector3f& grid_min,
                         const Eigen::Vector3f& grid_max,
                         float voxel_size);
-    virtual void SaveAsRAW(const std::string& filepath) const override;
     void SaveAsPLY(const std::string& filepath,
                    const std::vector<Eigen::Vector3i>& class_color_mapping) const;
     void SetVoxelClass(const uint32_t voxel_id, const uint8_t class_i);

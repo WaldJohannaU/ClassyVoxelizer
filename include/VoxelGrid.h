@@ -26,7 +26,6 @@ public:
                        float voxel_size);
     virtual const Eigen::Vector3i& GetVoxelsPerDim() const;
 
-    virtual void SaveAsRAW(const std::string& filepath) const = 0;
     virtual uint32_t GetEnclosingVoxelID(const Eigen::Vector3f& vertex) const;
 protected:
     Eigen::Vector3i _voxels_per_dim;

@@ -27,7 +27,6 @@ public:
                      const Eigen::Vector3f& grid_max,
                      float voxel_size);
 
-    virtual void SaveAsRAW(const std::string& filepath) const override;
     void SaveAsPLY(const std::string& filepath) const;
     void SetVoxelColor(const Eigen::Vector3f& vertex, const Eigen::Vector3i& color);
 

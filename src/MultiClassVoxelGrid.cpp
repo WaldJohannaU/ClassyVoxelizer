@@ -36,15 +36,6 @@ const std::vector<uint8_t>& MultiClassVoxelGrid::GetVoxelGrid() const {
     return _voxelgrid;
 }
 
-void MultiClassVoxelGrid::SaveAsRAW(const std::string& filepath) const {
-    
-    std::ofstream output_file(filepath);
-
-	for (auto voxel : _voxelgrid)
-		output_file << std::to_string(voxel) << std::endl;
-    output_file.close();
-}
-
 void MultiClassVoxelGrid::SaveAsPLY(const std::string& filepath,
                                     const std::vector<Eigen::Vector3i>& class_color_mapping) const {
 
