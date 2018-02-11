@@ -22,44 +22,48 @@
 #include "ColoredVoxelizer.h"
 #include "ColoredVoxelGrid.h"
 
+ClassyVoxelizer::ClassyVoxelizer(const float voxel_size): voxel_size_(voxel_size) {
+    
+}
+
 void ClassyVoxelizer::Process(const VoxelType voxel_type,
                               const std::string& input_file,
                               const std::string& output_file,
-                              const float voxel_size,
                               const std::string& mesh_output) {
-    vertices.clear();
-    faces.clear();
-    vertex_classes.clear();
-    vertex_labels.clear();
-    colormap.clear();
-    colors.clear();
+    vertices_.clear();
+    faces_.clear();
+    vertex_classes_.clear();
+    vertex_labels_.clear();
+    colormap_.clear();
+    colors_.clear();
     
     if (voxel_type == VoxelType::label) {
         ReadPly(input_file);
         // if the property label for the class was not found the classes are computed from, the color
-        if (vertex_labels.empty())
-            ComputeClassFromColor(vertex_classes);
+        if (vertex_labels_.empty())
+            ComputeClassFromColor(vertex_classes_);
         else
-            ComputeColorFromLabel(vertex_labels, num_labels);
+            ComputeColorFromLabel(vertex_labels_, num_labels_);
     } else if (voxel_type == VoxelType::color) {
         ReadPly(input_file);
     }
-    GetVoxelSpaceDimensions(voxel_size);
-    std::cout << "Voxelizing at " << voxel_size << "m resolution: " << std::flush;
+    GetVoxelSpaceDimensions(voxel_size_);
+    std::cout << "Voxelizing at " << voxel_size_ << "m resolution: " << std::flush;
     
     if (voxel_type == VoxelType::label) {
         MultiClassVoxelizer voxelizer;
-        MultiClassVoxelGrid voxelgrid(min, max, voxel_size);
-        voxelgrid.class_color_mapping = colormap;
-        voxelizer.Voxelize(voxelgrid, vertices, faces, vertex_labels.empty() ? vertex_classes : vertex_labels);
+        MultiClassVoxelGrid voxelgrid(min_, max_, voxel_size_);
+        voxelgrid.class_color_mapping = colormap_;
+        voxelizer.Voxelize(voxelgrid, vertices_, faces_, vertex_labels_.empty() ? vertex_classes_ : vertex_labels_);
         voxelgrid.SaveAsPLY(output_file);
+        voxelgrid.SaveAsPLYMesh(mesh_output);
     } else if (voxel_type == VoxelType::color) {
         ColoredVoxelizer voxelizer;
-        ColoredVoxelGrid voxelgrid(min, max, voxel_size);
-        voxelizer.Voxelize(voxelgrid, vertices, faces, colors);
+        ColoredVoxelGrid voxelgrid(min_, max_, voxel_size_);
+        voxelizer.Voxelize(voxelgrid, vertices_, faces_, colors_);
         voxelgrid.SaveAsPLY(output_file);
+        voxelgrid.SaveAsPLYMesh(mesh_output);
     }
-    // if (mesh_output != "")
 }
 
 int ClassyVoxelizer::ReadPly(const std::string& filepath) {
@@ -72,26 +76,26 @@ int ClassyVoxelizer::ReadPly(const std::string& filepath) {
     const uint32_t num_vertices = input_file.request_properties_from_element("vertex", { "x", "y", "z" }, raw_vertices);
     input_file.request_properties_from_element("vertex", { "red", "green", "blue" }, raw_colors);
     input_file.request_properties_from_element("vertex", { "label" }, raw_labels);
-    input_file.request_properties_from_element("face", { "vertex_indices" }, faces, 3);
-    
+    input_file.request_properties_from_element("face", { "vertex_indices" }, faces_, 3);
+
     input_file.read(ss);
     
-    vertices.resize(num_vertices);
-    colors.resize(num_vertices);
+    vertices_.resize(num_vertices);
+    colors_.resize(num_vertices);
     if (raw_labels.size() == num_vertices)
-        vertex_labels.resize(num_vertices);
+        vertex_labels_.resize(num_vertices);
     
     int raw_vertices_i = 0;
     int raw_colors_i = 0;
     for (int i = 0; i < num_vertices; i++) {
-        vertices[i][0] = raw_vertices[raw_vertices_i++];
-        vertices[i][1] = raw_vertices[raw_vertices_i++];
-        vertices[i][2] = raw_vertices[raw_vertices_i++];
-        colors[i][0] = raw_colors[raw_colors_i++];
-        colors[i][1] = raw_colors[raw_colors_i++];
-        colors[i][2] = raw_colors[raw_colors_i++];
+        vertices_[i][0] = raw_vertices[raw_vertices_i++];
+        vertices_[i][1] = raw_vertices[raw_vertices_i++];
+        vertices_[i][2] = raw_vertices[raw_vertices_i++];
+        colors_[i][0] = raw_colors[raw_colors_i++];
+        colors_[i][1] = raw_colors[raw_colors_i++];
+        colors_[i][2] = raw_colors[raw_colors_i++];
         if (raw_labels.size() == num_vertices)
-            vertex_labels[i] = raw_labels[i];
+            vertex_labels_[i] = raw_labels[i];
     }
     return num_vertices;
 }
@@ -112,20 +116,20 @@ bool ClassyVoxelizer::CreateColorMap(const std::vector<Eigen::Vector3i>& colors,
 
 bool ClassyVoxelizer::ComputeColorFromLabel(std::vector<uint16_t>& labels,
                                             const int num_labels) {
-    colormap.resize(num_labels);
-    std::fill(colormap.begin(), colormap.end(), Eigen::Vector3i(250, 0, 0));
+    colormap_.resize(num_labels);
+    std::fill(colormap_.begin(), colormap_.end(), Eigen::Vector3i(250, 0, 0));
     
     std::vector<uint16_t> labelmap;
-    for (int i = 0; i < colors.size(); i++) {
+    for (int i = 0; i < colors_.size(); i++) {
         if (std::find(labelmap.begin(), labelmap.end(), labels[i]) == labelmap.end()) {
             // new label found
             const int label = labels[i];
             labelmap.push_back(label);
-            if (label > colormap.size()) {
+            if (label > colormap_.size()) {
                 std::cout << "skip label in ply (index above threshold)." << std::endl;
                 continue;
             }
-            colormap[label] = colors[i];
+            colormap_[label] = colors_[i];
         }
     }
     // map of labels
@@ -137,14 +141,14 @@ bool ClassyVoxelizer::ComputeColorFromLabel(std::vector<uint16_t>& labels,
 }
 
 bool ClassyVoxelizer::ComputeClassFromColor(std::vector<uint16_t>& classes) {
-    classes.resize(colors.size());
-    CreateColorMap(colors, colormap);
+    classes.resize(colors_.size());
+    CreateColorMap(colors_, colormap_);
     
     int vertex_class_i = 0;
-    for (const auto& color: colors) {
+    for (const auto& color: colors_) {
         int class_i;
-        for (class_i = 0; class_i < colormap.size(); class_i++) {
-            if (colormap[class_i] == color) {
+        for (class_i = 0; class_i < colormap_.size(); class_i++) {
+            if (colormap_[class_i] == color) {
                 break;
             }
         }
@@ -156,33 +160,33 @@ bool ClassyVoxelizer::ComputeClassFromColor(std::vector<uint16_t>& classes) {
 void ClassyVoxelizer::GetVoxelSpaceDimensions(const double voxel_size) {
     Eigen::Vector3f centroid(0,0,0);
     
-    for (const Eigen::Vector3f& vertex: vertices)
+    for (const Eigen::Vector3f& vertex: vertices_)
         centroid += vertex;
-    centroid /= vertices.size();
+    centroid /= vertices_.size();
     
-    max = centroid;
-    min = centroid;
+    max_ = centroid;
+    min_ = centroid;
     
-    for (const Eigen::Vector3f& vertex: vertices) {
-        if ((vertex[0] - centroid[0]) > (max[0] - centroid[0]))
-            max[0] = vertex[0];
+    for (const Eigen::Vector3f& vertex: vertices_) {
+        if ((vertex[0] - centroid[0]) > (max_[0] - centroid[0]))
+            max_[0] = vertex[0];
         
-        if ((vertex[1] - centroid[1]) > (max[1] - centroid[1]))
-            max[1] = vertex[1];
+        if ((vertex[1] - centroid[1]) > (max_[1] - centroid[1]))
+            max_[1] = vertex[1];
         
-        if ((vertex[2] - centroid[2]) > (max[2] - centroid[2]))
-            max[2] = vertex[2];
+        if ((vertex[2] - centroid[2]) > (max_[2] - centroid[2]))
+            max_[2] = vertex[2];
         
-        if ((vertex[0] - centroid[0]) < (min[0] - centroid[0]))
-            min[0] = vertex[0];
+        if ((vertex[0] - centroid[0]) < (min_[0] - centroid[0]))
+            min_[0] = vertex[0];
         
-        if ((vertex[1] - centroid[1]) < (min[1] - centroid[1]))
-            min[1] = vertex[1];
+        if ((vertex[1] - centroid[1]) < (min_[1] - centroid[1]))
+            min_[1] = vertex[1];
         
-        if ((vertex[2] - centroid[2]) < (min[2] - centroid[2]))
-            min[2] = vertex[2];
+        if ((vertex[2] - centroid[2]) < (min_[2] - centroid[2]))
+            min_[2] = vertex[2];
     }
     
-    max += Eigen::Vector3f(voxel_size, voxel_size, voxel_size);
-    min -= Eigen::Vector3f(voxel_size, voxel_size, voxel_size);
+    max_ += Eigen::Vector3f(voxel_size_, voxel_size_, voxel_size_);
+    min_ -= Eigen::Vector3f(voxel_size_, voxel_size_, voxel_size_);
 }

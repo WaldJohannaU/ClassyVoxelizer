@@ -18,23 +18,25 @@ enum class VoxelType {
 
 class ClassyVoxelizer {
 public:
+    ClassyVoxelizer(const float voxel_size);
     void Process(const VoxelType voxel_type,
                  const std::string& input_file,
                  const std::string& output_file,
-                 const float voxel_size,
                  const std::string& mesh_output);
 private:
-    const int num_labels = 1163; // ScanNet
-    Eigen::Vector3f min;
-    Eigen::Vector3f max;
+    const float voxel_size_ = 0;
+    const int num_labels_ = 1163; // ScanNet
+    Eigen::Vector3f min_;
+    Eigen::Vector3f max_;
     
-    std::vector<Eigen::Vector3f> vertices;
-    std::vector<uint32_t> faces;
-    std::vector<uint16_t> vertex_classes;
-    std::vector<uint16_t> vertex_labels;
-    std::vector<Eigen::Vector3i> colormap;
-    std::vector<Eigen::Vector3i> colors;
+    std::vector<Eigen::Vector3f> vertices_;
+    std::vector<uint32_t> faces_;
+    std::vector<uint16_t> vertex_classes_;
+    std::vector<uint16_t> vertex_labels_;
+    std::vector<Eigen::Vector3i> colormap_;
+    std::vector<Eigen::Vector3i> colors_;
 
+    bool SaveVoxelizedMesh(const std::string& file_name) const;
     int ReadPly(const std::string& filepath);
     bool CreateColorMap(const std::vector<Eigen::Vector3i>& colors,
                         std::vector<Eigen::Vector3i>& colormap);

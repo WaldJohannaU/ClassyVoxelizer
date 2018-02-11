@@ -104,6 +104,135 @@ void VoxelGridInterface::SaveAsPLY(const std::string& filepath) const {
     fb.close();
 }
 
+
+/*void ClassyVoxelizer::WriteFace(std::vector<uint32_t>& local_faces,
+ int& index,
+ const int v1, const int v2, const int v3) const {
+ local_faces[index++] = v1;
+ local_faces[index++] = v2;
+ local_faces[index++] = v3;
+ }
+ 
+ void ClassyVoxelizer::WriteVertex(
+ std::vector<float>& local_vertices,
+ std::vector<uint8_t>& local_colors,
+ const Eigen::Vector3f vertex,
+ const Eigen::Vector3i color,
+ int& color_index,
+ int& vertex_index) const {
+ 
+ local_colors[color_index++] = static_cast<uint8_t>(color[0]);
+ local_colors[color_index++] = static_cast<uint8_t>(color[1]);
+ local_colors[color_index++] = static_cast<uint8_t>(color[2]);
+ local_colors[color_index++] = 255;
+ 
+ local_vertices[vertex_index++] = static_cast<float>(vertex[0]);
+ local_vertices[vertex_index++] = static_cast<float>(vertex[1]);
+ local_vertices[vertex_index++] = static_cast<float>(vertex[2]);
+ }*/
+
+void VoxelGridInterface::WritePlyHeader(std::ofstream& file_out_, const int vertex, const int faces) const {
+    file_out_ << "ply" << std::endl;
+    file_out_ << "format ascii 1.0" << std::endl;
+    file_out_ << "element vertex " << vertex << std::endl;
+    file_out_ << "property float x" << std::endl;
+    file_out_ << "property float y" << std::endl;
+    file_out_ << "property float z" << std::endl;
+    file_out_ << "property float nx" << std::endl;
+    file_out_ << "property float ny" << std::endl;
+    file_out_ << "property float nz" << std::endl;
+    file_out_ << "property uchar red" << std::endl;
+    file_out_ << "property uchar green" << std::endl;
+    file_out_ << "property uchar blue" << std::endl;
+    file_out_ << "element face " << faces << std::endl;
+    file_out_ << "property list uchar int vertex_indices" << std::endl;
+    file_out_ << "end_header" << std::endl;
+}
+
+void VoxelGridInterface::WriteVertex(std::stringstream& vertices_,
+                                     const Eigen::Vector3f& pos, const Eigen::Vector3i& color) const {
+    vertices_ << pos[0] << " " << pos[1] << " " << pos[2] << " 0 0 0 " <<
+                 color[0] << " " << color[1] << " " << color[2] << std::endl;
+}
+
+void VoxelGridInterface::WriteFace(std::stringstream& faces_,
+                                const int index1, const int index2, const int index3) const {
+    faces_ << "3 " << index1 << " " << index2 << " " << index3 << std::endl;
+}
+
+void VoxelGridInterface::SaveAsPLYMesh(const std::string& filepath) const {
+    if (filepath == "")
+        return;
+    const unsigned int num_occupied_voxels = GetNumOccupiedVoxels();
+    std::vector<float> vertices(num_occupied_voxels * 3);
+    std::vector<uint8_t> colors(num_occupied_voxels * 4);
+    std::vector<int> labels(num_occupied_voxels * 4);
+    Eigen::Vector3f point;
+    Eigen::Vector3i color;
+    std::stringstream faces_;
+    std::stringstream vertices_;
+    int counter_faces = 0;
+    int counter_vertices = 0;
+    int s = 0;
+    const float voxel_size = voxel_size_ / 2.0f * 0.95f;
+    
+    std::ofstream file_out_;
+    file_out_.open(filepath);
+    
+    for (int i = 0; i < voxels_per_dim_[0]; i++) {
+        for (int j = 0; j < voxels_per_dim_[1]; j++) {
+            for (int k = 0; k < voxels_per_dim_[2]; k++) {
+                const uint32_t voxel_id = static_cast<unsigned int>(voxels_per_dim_[0] *
+                                                                    voxels_per_dim_[1] * k +
+                                                                    voxels_per_dim_[0] * j + i);
+                if (IsVoxelOccupied(voxel_id)) {
+                    const Eigen::Vector3i& color = GetVoxelColor(voxel_id);
+                    Eigen::Vector3f point((i * voxel_size_) + grid_min_[0] + voxel_size_ / 2,
+                                          (j * voxel_size_) + grid_min_[1] + voxel_size_ / 2,
+                                          (k * voxel_size_) + grid_min_[2] + voxel_size_ / 2);
+                    const int offset = 8*s;
+                    WriteFace(faces_, offset, offset+1, offset+3);
+                    WriteFace(faces_, offset+3, offset+2, offset+1);
+                    WriteFace(faces_, offset+3, offset+2, offset+6);
+                    WriteFace(faces_, offset+6, offset+7, offset+3);
+                    WriteFace(faces_, offset+7, offset+6, offset+5);
+                    WriteFace(faces_, offset+5, offset+4, offset+7);
+                    WriteFace(faces_, offset+4, offset+5, offset+1);
+                    WriteFace(faces_, offset+1, offset+0, offset+4);
+                    WriteFace(faces_, offset+4, offset+0, offset+3);
+                    WriteFace(faces_, offset+3, offset+7, offset+4);
+                    WriteFace(faces_, offset+5, offset+6, offset+2);
+                    WriteFace(faces_, offset+2, offset+1, offset+5);
+                    counter_faces += 12;
+                    
+                    Eigen::Vector3f p1(-voxel_size + point[0], voxel_size + point[1], voxel_size + point[2]);
+                    Eigen::Vector3f p2(-voxel_size + point[0], voxel_size + point[1], -voxel_size + point[2]);
+                    Eigen::Vector3f p3(voxel_size + point[0], voxel_size + point[1], -voxel_size + point[2]);
+                    
+                    WriteVertex(vertices_, p1, color);
+                    WriteVertex(vertices_, p2, color);
+                    WriteVertex(vertices_, p3, color);
+                    WriteVertex(vertices_,
+                                Eigen::Vector3f(voxel_size + point[0], voxel_size + point[1], voxel_size + point[2]), color);
+                    WriteVertex(vertices_,
+                                Eigen::Vector3f(-voxel_size + point[0], -voxel_size + point[1], voxel_size + point[2]), color);
+                    WriteVertex(vertices_,
+                                Eigen::Vector3f(-voxel_size + point[0], -voxel_size + point[1], -voxel_size + point[2]), color);
+                    WriteVertex(vertices_,
+                                Eigen::Vector3f(voxel_size + point[0], -voxel_size + point[1], -voxel_size + point[2]), color);
+                    WriteVertex(vertices_,
+                                Eigen::Vector3f(voxel_size + point[0], -voxel_size + point[1], voxel_size + point[2]), color);
+                    counter_vertices += 8;
+                    s++;
+                }
+            }
+        }
+    }
+    WritePlyHeader(file_out_, counter_vertices, counter_faces);
+    file_out_ << vertices_.str() << faces_.str();
+    file_out_.close();
+}
+
 int VoxelGridInterface::GetVoxelClass(const uint32_t voxel_id) const {
     return 0;
 }
