@@ -23,6 +23,7 @@
 
 class MultiClassVoxelizer: public Voxelizer {
 public:
+    MultiClassVoxelizer() = default;
     void Voxelize(MultiClassVoxelGrid& voxel_grid,
                   std::vector<Eigen::Vector3f>& vertices,
                   std::vector<uint32_t>& faces,

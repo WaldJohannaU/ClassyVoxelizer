@@ -24,14 +24,15 @@ protected:
     const float kVoxelizerMinTriangleArea = 0.00001;
     virtual Eigen::Vector3f GetMidpoint(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2) const;
     virtual const float EuclideanDistance(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2) const;
-    virtual const float AreaOfTriangle(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2, const Eigen::Vector3f& v3) const;
+    virtual const float AreaOfTriangle(const Eigen::Vector3f& v1,
+                                       const Eigen::Vector3f& v2,
+                                       const Eigen::Vector3f& v3) const;
     virtual int SplitBaseFace(const VoxelGridInterface& voxel_grid,
                               std::vector<Eigen::Vector3f>& vertices,
                               std::vector<uint32_t>& face,
                               std::vector<uint32_t>& sub_faces,
                               std::vector<uint32_t>& first_sub_face,
                               std::vector<uint32_t>& second_sub_face) const;
-
 };
 
 #endif /* defined(__MULTICLASSVOXELIZER__) */

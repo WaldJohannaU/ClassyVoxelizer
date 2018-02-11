@@ -22,6 +22,7 @@
 
 class ColoredVoxelizer: public Voxelizer {
 public:
+    ColoredVoxelizer() = default;
     void Voxelize(ColoredVoxelGrid& voxel_grid,
                   std::vector<Eigen::Vector3f>& vertices,
                   std::vector<uint32_t>& faces,
@@ -32,7 +33,6 @@ private:
                    std::vector<Eigen::Vector3i>& colors,
                    std::vector<uint32_t>& face,
                    std::vector<uint32_t>& sub_faces);
-       
 };
 
 #endif /* defined(__ColoredVOXELIZER__) */

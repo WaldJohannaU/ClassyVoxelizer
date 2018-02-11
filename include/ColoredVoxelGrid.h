@@ -9,10 +9,6 @@
 #ifndef __ColoredVOXELGRID__
 #define __ColoredVOXELGRID__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
-#include <fstream>
 #include <vector>
 
 //Eigen
@@ -25,20 +21,16 @@ class ColoredVoxelGrid: public VoxelGridInterface {
 public:
     ColoredVoxelGrid(const Eigen::Vector3f& grid_min,
                      const Eigen::Vector3f& grid_max,
-                     float voxel_size);
-
-    void SaveAsPLY(const std::string& filepath) const;
+                     const float voxel_size);
     void SetVoxelColor(const Eigen::Vector3f& vertex, const Eigen::Vector3i& color);
-
 private:
-    std::vector<Eigen::Vector3i> _voxelgrid;
+    std::vector<Eigen::Vector3i> voxel_grid_;
+    const Eigen::Vector3i empty_voxel_;
     void SetVoxelColor(const uint32_t voxel_id, const Eigen::Vector3i& color);
-
     virtual bool IsVoxelOccupied(const uint32_t voxel_id) const override;
-    std::vector<Eigen::Vector3i> GetVoxelGrid();
-    
-    Eigen::Vector3i GetVoxelColor(const uint32_t voxel_id) const;
-    const std::vector<Eigen::Vector3i>& GetVoxelGrid() const;
+    virtual const Eigen::Vector3i& GetVoxelColor(const uint32_t voxel_id) const override;
+
+    virtual unsigned int GetNumOccupiedVoxels() const override;
 };
 
 #endif /* defined(__ColoredVOXELGRID__) */

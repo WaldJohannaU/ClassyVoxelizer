@@ -26,16 +26,14 @@ public:
     MultiClassVoxelGrid(const Eigen::Vector3f& grid_min,
                         const Eigen::Vector3f& grid_max,
                         float voxel_size);
-    void SaveAsPLY(const std::string& filepath,
-                   const std::vector<Eigen::Vector3i>& class_color_mapping) const;
     void SetVoxelClass(const uint32_t voxel_id, const uint8_t class_i);
+    std::vector<Eigen::Vector3i> class_color_mapping;
 private:
-    std::vector<uint8_t> _voxelgrid;
-
+    std::vector<uint8_t> voxel_grid_;
     virtual bool IsVoxelOccupied(const uint32_t voxel_id) const override;
-    virtual int GetVoxelClass(const uint32_t voxel_id) const;
-  
-    const std::vector<uint8_t>& GetVoxelGrid() const;
+    virtual int GetVoxelClass(const uint32_t voxel_id) const override;
+    virtual const Eigen::Vector3i& GetVoxelColor(const uint32_t voxel_id) const override;
+    virtual unsigned int GetNumOccupiedVoxels() const override;
 };
 
 #endif /* defined(__MULTICLASSVOXELGRID__) */

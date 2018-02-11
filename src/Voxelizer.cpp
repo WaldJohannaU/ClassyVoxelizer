@@ -7,6 +7,7 @@
  */
 
 #include "Voxelizer.h"
+#include "VoxelGrid.h"
 
 Eigen::Vector3f Voxelizer::GetMidpoint(const Eigen::Vector3f& v1, const Eigen::Vector3f& v2) const {
     return (v1 + v2) / 2;
@@ -23,11 +24,12 @@ const float Voxelizer::AreaOfTriangle(const Eigen::Vector3f& v1,
 }
 
 int Voxelizer::SplitBaseFace(const VoxelGridInterface& voxel_grid,
-                          std::vector<Eigen::Vector3f>& vertices,
-                          std::vector<uint32_t>& face,
-                          std::vector<uint32_t>& sub_faces,
-                          std::vector<uint32_t>& first_sub_face,
-                          std::vector<uint32_t>& second_sub_face) const {
+                             std::vector<Eigen::Vector3f>& vertices,
+                             std::vector<uint32_t>& face,
+                             std::vector<uint32_t>& sub_faces,
+                             std::vector<uint32_t>& first_sub_face,
+                             std::vector<uint32_t>& second_sub_face) const {
+    
     if (AreaOfTriangle(vertices[face[0]], vertices[face[1]], vertices[face[2]]) < kVoxelizerMinTriangleArea) {
         sub_faces.insert(sub_faces.end(), face.begin(), face.end());
         return -1;
@@ -69,4 +71,3 @@ int Voxelizer::SplitBaseFace(const VoxelGridInterface& voxel_grid,
     
     return longest_i;
 }
-
