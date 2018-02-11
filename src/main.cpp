@@ -24,31 +24,27 @@ int readPly(const std::string& filepath,
             std::vector<Eigen::Vector3f>& vertices,
             std::vector<uint32_t>& faces,
             std::vector<Eigen::Vector3i>& colors,
-            std::vector<uint16_t> labels) {
+            std::vector<uint16_t>& labels) {
     std::ifstream ss(filepath, std::ios::binary);
     tinyply::PlyFile input_file(ss);
     std::vector<float> raw_vertices;
     std::vector<uint8_t> raw_colors;
     std::vector<uint16_t> raw_labels;
 
-    uint32_t num_vertices, num_colors, num_faces, num_labels;
-    num_vertices = num_colors = num_faces = 0;
-    
-    num_vertices = input_file.request_properties_from_element("vertex", { "x", "y", "z" }, raw_vertices);
-    num_colors = input_file.request_properties_from_element("vertex", { "red", "green", "blue" }, raw_colors);
-    num_labels = input_file.request_properties_from_element("vertex", { "label" }, raw_labels);
-    num_faces = input_file.request_properties_from_element("face", { "vertex_indices" }, faces, 3);
+    const uint32_t num_vertices = input_file.request_properties_from_element("vertex", { "x", "y", "z" }, raw_vertices);
+    input_file.request_properties_from_element("vertex", { "red", "green", "blue" }, raw_colors);
+    input_file.request_properties_from_element("vertex", { "label" }, raw_labels);
+    input_file.request_properties_from_element("face", { "vertex_indices" }, faces, 3);
     
     input_file.read(ss);
     
     vertices.resize(num_vertices);
     colors.resize(num_vertices);
-    labels.resize(num_vertices);
+    if (raw_labels.size() == num_vertices)
+        labels.resize(num_vertices);
 
     int raw_vertices_i = 0;
     int raw_colors_i = 0;
-    int label_i = 0;
-
     for (int i = 0; i < num_vertices; i++) {
         vertices[i][0] = raw_vertices[raw_vertices_i++];
         vertices[i][1] = raw_vertices[raw_vertices_i++];
@@ -56,26 +52,60 @@ int readPly(const std::string& filepath,
         colors[i][0] = raw_colors[raw_colors_i++];
         colors[i][1] = raw_colors[raw_colors_i++];
         colors[i][2] = raw_colors[raw_colors_i++];
-        labels[i] = raw_labels[label_i++];
+        if (raw_labels.size() == num_vertices)
+            labels[i] = raw_labels[i];
     }
     return num_vertices;
 }
 
-bool computeClassFromColor(std::vector<Eigen::Vector3i>& colors,
-                           std::vector<uint16_t>& classes,
-                           std::vector<Eigen::Vector3i>& colormap) {
-    const int num_vertices = colors.size();
-    classes.resize(num_vertices);
-    for (const auto& color : colors) {
-        if(std::find(colormap.begin(), colormap.end(), color) == colormap.end())
+// create map with unique colors in the scene
+bool createColorMap(const std::vector<Eigen::Vector3i>& colors,
+                    std::vector<Eigen::Vector3i>& colormap) {
+    for (const auto& color: colors) {
+        if (std::find(colormap.begin(), colormap.end(), color) == colormap.end())
             colormap.push_back(color);
     }
-    
     if (colormap.size() > 255) {
         std::cerr << "Error: ClassyVoxelizer only supports up to 255 classes." << std::endl;
         return false;
     }
+    return true;
+}
+
+bool computeColorFromLabel(const std::vector<Eigen::Vector3i>& colors,
+                           std::vector<uint16_t>& labels,
+                           std::vector<Eigen::Vector3i>& colormap,
+                           const int num_labels) {
+    colormap.resize(num_labels);
+    std::fill(colormap.begin(), colormap.end(), Eigen::Vector3i(250, 0, 0));
     
+    std::vector<uint16_t> labelmap;
+    for (int i = 0; i < colors.size(); i++) {
+        if (std::find(labelmap.begin(), labelmap.end(), labels[i]) == labelmap.end()) {
+            // new label found
+            const int label = labels[i];
+            labelmap.push_back(label);
+            if (label > colormap.size()) {
+                std::cout << "skip label in ply (index above threshold)." << std::endl;
+                continue;
+            }
+            colormap[label] = colors[i];
+        }
+    }
+    // map of labels
+    if (labelmap.size() > 255) {
+        std::cerr << "Error: ClassyVoxelizer only supports up to 255 classes." << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool computeClassFromColor(const std::vector<Eigen::Vector3i>& colors,
+                           std::vector<uint16_t>& classes,
+                           std::vector<Eigen::Vector3i>& colormap) {
+    classes.resize(colors.size());
+    createColorMap(colors, colormap);
+
     int vertex_class_i = 0;
     for (const auto& color: colors) {
         int class_i;
@@ -98,7 +128,6 @@ void getVoxelSpaceDimensions(const std::vector<Eigen::Vector3f>& vertices,
     
     for (const Eigen::Vector3f& vertex: vertices)
         centroid += vertex;
-    
     centroid /= vertices.size();
     
     max = centroid;
@@ -128,45 +157,53 @@ void getVoxelSpaceDimensions(const std::vector<Eigen::Vector3f>& vertices,
     min -= Eigen::Vector3f(voxel_size, voxel_size, voxel_size);
 }
 
-
 int main (int argc, char* argv[]) {
     if (argc < 5) {
         const std::string usage_message = "\nUsage:\n\n./classyvoxelizer <input> <output> <voxel_size> <class/color>\n";
         std::cout << usage_message << std::endl;
         return 0;
     }
-    
     const std::string input_filepath = argv[1];
     const std::string output_filepath = argv[2];
     const double voxel_size = std::stod(argv[3]);
+    const std::string type = argv[4];
+     
+    const int num_labels = 1163; // ScanNet
     
     std::vector<Eigen::Vector3f> vertices;
     std::vector<uint32_t> faces;
     std::vector<uint16_t> vertex_classes;
+    std::vector<uint16_t> vertex_labels;
     std::vector<Eigen::Vector3i> colormap;
     std::vector<Eigen::Vector3i> colors;
-    std::vector<uint16_t> labels;
     
-    // std::unique_ptr<VoxelGridInterface> voxel_grid;
-    if (std::string(argv[4]) == "class") {
-        readPly(input_filepath, vertices, faces, colors, labels);
-        computeClassFromColor(colors, vertex_classes, colormap);
-    } else if (std::string(argv[4]) == "color") {
-        readPly(input_filepath, vertices, faces, colors, labels);
+    if (type == "class") {
+        readPly(input_filepath, vertices, faces, colors, vertex_labels);
+        // if the property label for the class was not found the classes are computed from, the color
+        if (vertex_labels.empty()) {
+            computeClassFromColor(colors, vertex_classes, colormap);
+        } else {
+            computeColorFromLabel(colors, vertex_labels, colormap, num_labels);
+        }
+    } else if (type == "color") {
+        readPly(input_filepath, vertices, faces, colors, vertex_labels);
     }
-    
+
     Eigen::Vector3f min;
     Eigen::Vector3f max;
     getVoxelSpaceDimensions(vertices, voxel_size, min, max);
     std::cout << "Voxelizing at " << voxel_size << "m resolution: " << std::flush;
     
-    if (std::string(argv[4]) == "class") {
-        MultiClassVoxelGrid voxelgrid =
-            MultiClassVoxelizer::Voxelize(vertices, faces, min, max, voxel_size, vertex_classes);
-        voxelgrid.SaveAsPLY(output_filepath, colormap);
-    } else if (std::string(argv[4]) == "color") {
-        ColoredVoxelGrid voxelgrid =
-            ColoredVoxelizer::Voxelize(vertices, faces, min, max, voxel_size, colors);
+    if (type == "class") {
+        MultiClassVoxelizer voxelizer;
+        MultiClassVoxelGrid voxelgrid(min, max, voxel_size);
+        voxelgrid.class_color_mapping = colormap;
+        voxelizer.Voxelize(voxelgrid, vertices, faces, vertex_labels.empty() ? vertex_classes : vertex_labels);
+        voxelgrid.SaveAsPLY(output_filepath);
+    } else if (type == "color") {
+        ColoredVoxelizer voxelizer;
+        ColoredVoxelGrid voxelgrid(min, max, voxel_size);
+        voxelizer.Voxelize(voxelgrid, vertices, faces, colors);
         voxelgrid.SaveAsPLY(output_filepath);
     }
     return 0;
